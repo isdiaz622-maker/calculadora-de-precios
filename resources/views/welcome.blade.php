@@ -157,6 +157,40 @@
                 </div>
             </div>
 
+            <div class="mb-4">
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="activar_cliente" onclick="toggleCliente()">
+        <label class="form-check-label fw-bold text-primary" for="activar_cliente uppercase">
+            ¿INCLUIR DATOS DEL CLIENTE?
+        </label>
+    </div>
+
+    <div id="seccion_cliente" style="display: none;" class="p-3 border rounded bg-light">
+        <h6 class="seccion-titulo text-dark mb-3">
+            <i class="fas fa-user-edit me-2"></i> Datos del Cliente
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Nombre Completo</label>
+                <input type="text" id="cliente_nombre" class="form-control form-control-sm" placeholder="Nombre del cliente">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Dirección</label>
+                <input type="text" id="cliente_direccion" class="form-control form-control-sm" placeholder="Dirección exacta">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Teléfono</label>
+                <input type="tel" id="cliente_tel" class="form-control form-control-sm" placeholder="0000-0000" maxlength="9">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Cédula / RUC</label>
+                <input type="text" id="cliente_cedula" class="form-control form-control-sm" placeholder="ID del cliente">
+            </div>
+        </div>
+    </div>
+</div>
+<h6 class="seccion-titulo"><i class="fas fa-map-marker-alt me-2"></i> <span id="label_seccion_logistica">Logística de Entrega</span></h6>
+
             <div class="card p-4">
                 <h6 class="seccion-titulo"><i class="fas fa-map-marker-alt me-2"></i> <span id="label_seccion_logistica">Logística de Entrega</span></h6>
                 <div class="row g-3 mb-4">
@@ -192,12 +226,19 @@
                         <label class="form-label fw-semibold">Cant.</label>
                         <input type="number" id="cant_servicio" class="form-control text-center" value="1" min="1">
                     </div>
-                    <div class="col-md-auto">
-                        <button type="button" class="btn btn-add" onclick="agregarServicioAMemoria()">
-                            <i class="fas fa-plus me-2"></i>Agregar
-                        </button>
-                    </div>
-                </div>
+                <div id="contenedor-descripcion" class="col-12" style="display: none; margin-bottom: 15px;">
+    <label style="font-weight: bold; color: #1a4a8e;">
+        Descripción del Servicio Especial <span style="color:red;">*</span>
+    </label>
+    <textarea id="descripcion_servicio" class="form-control" rows="2"
+              placeholder="Escriba los detalles aquí (Campo obligatorio)..." required></textarea>
+</div>
+
+<div class="col-md-auto">
+    <button type="button" class="btn btn-add" onclick="agregarServicioAMemoria()">
+        <i class="fas fa-plus me-2"></i>Agregar
+    </button>
+</div>
 
                 <div id="seccion_extras" style="display:none;">
                     <h6 class="seccion-titulo"><i class="fas fa-plus-circle me-2"></i> Cargos Extras por Mobiliario</h6>
@@ -674,8 +715,8 @@
 
             // Si el servicio tiene precios por rango (dinámico)
             if (s.dinamico) {
-                opt.dataset.dinamico = "true";
-                opt.dataset.pbajo = s.precio_bajo;
+          opt.dataset.dinamico = "true";
+                      opt.dataset.pbajo = s.precio_bajo;
                 opt.dataset.palto = s.precio_alto;
                 opt.dataset.limite = s.limite;
             } else {
@@ -702,43 +743,79 @@
     }
 
     function agregarServicioAMemoria() {
+    // 1. Capturar elementos
     const itemS = document.getElementById('item_servicio');
     const cantInput = document.getElementById('cant_servicio');
-    const cant = parseFloat(cantInput.value);
+    const descripcionInput = document.getElementById('descripcion_servicio');
+    const contenedorDesc = document.getElementById('contenedor-descripcion'); // El div que aparece y desaparece
 
-    // Validaciones básicas
-    if(!itemS.value || itemS.value === "--") return alert("Por favor, seleccione un servicio.");
-    if(isNaN(cant) || cant <= 0) return alert("Ingrese una cantidad válida mayor a 0.");
+    // ==========================================
+    // BLOQUEO TOTAL POR VISIBILIDAD
+    // ==========================================
+    // Si el contenedor de descripción está a la vista (display !== 'none')
+    if (contenedorDesc && contenedorDesc.style.display !== 'none') {
 
-    const opt = itemS.options[itemS.selectedIndex];
-    let precioFinal = 0;
+        // Si el usuario no escribió nada
+        if (descripcionInput.value.trim() === "") {
 
-    // LÓGICA DE PRECIOS DINÁMICOS (Alfombras, Vidrios, Pisos, Sanetización)
-    if(opt.dataset.dinamico === "true") {
-        const limite = parseFloat(opt.dataset.limite);
-        const pBajo = parseFloat(opt.dataset.pbajo); // Precio si es poca cantidad
-        const pAlto = parseFloat(opt.dataset.palto); // Precio si supera el límite
+            // 1. Aviso visual
+            descripcionInput.style.border = "2px solid red";
+            descripcionInput.style.backgroundColor = "#fff0f0";
+            descripcionInput.focus();
 
-        // Si la cantidad es igual o mayor al límite (ej. 100m2), aplica el precio barato
-        precioFinal = (cant >= limite) ? pAlto : pBajo;
-    } else {
-        // Si es un servicio normal (como un Sedan), usa el precio fijo de siempre
-        precioFinal = parseFloat(opt.dataset.precio);
+            // 2. Alerta al usuario
+            alert("❌ BLOQUEO: La descripción es obligatoria para este servicio.");
+
+            // 3. CORTAR EL VIAJE: No permite seguir a la suma ni al carrito
+            return;
+        }
     }
 
-    // Guardamos en el carrito
+    // --- SI LLEGÓ AQUÍ, EL SERVICIO ES VÁLIDO O NO NECESITA DESCRIPCIÓN ---
+
+    // Validaciones básicas de selección
+    if(!itemS.value || itemS.value === "--") return alert("Por favor, seleccione un servicio.");
+    const cant = parseFloat(cantInput.value);
+    if(isNaN(cant) || cant <= 0) return alert("Ingrese una cantidad válida.");
+
+    // Limpiamos estilos de error
+    if(descripcionInput) {
+        descripcionInput.style.border = "1px solid #ced4da";
+        descripcionInput.style.backgroundColor = "#fff";
+    }
+
+    // Lógica de Precios (Tu código original)
+    const opt = itemS.options[itemS.selectedIndex];
+    let precioFinal = 0;
+    if(opt.dataset.dinamico === "true") {
+        const limite = parseFloat(opt.dataset.limite);
+        const pBajo = parseFloat(opt.dataset.pbajo);
+        const pAlto = parseFloat(opt.dataset.palto);
+        precioFinal = (cant >= limite) ? pAlto : pBajo;
+    } else {
+        precioFinal = parseFloat(opt.dataset.precio) || 0;
+    }
+
+    // AGREGAR AL CARRITO
     carrito.push({
         tipo: 'Servicio',
         nombre: itemS.value,
         precio: precioFinal,
         cant: cant,
-        total: precioFinal * cant
+        total: precioFinal * cant,
+        // Guardamos la descripción para el PDF
+        descripcion_pdf: descripcionInput.value.trim()
     });
 
+    // ACTUALIZAR RESUMEN
     renderLista();
 
-    // Opcional: resetear cantidad a 1 para el siguiente item
+    // LIMPIAR CAMPOS
+    descripcionInput.value = "";
+    if(contenedorDesc) contenedorDesc.style.display = 'none';
     cantInput.value = 1;
+
+    console.log("Servicio agregado correctamente al resumen.");
 }
 
     function agregarTransporte() {
@@ -819,142 +896,279 @@
         cambiarEmpresa();
     }
 
-    async function generarPDF() {
-        if(carrito.length === 0) return alert("Agregue servicios para generar la cotización");
+async function generarPDF() {
+    if(carrito.length === 0) return alert("Agregue servicios para generar la cotización");
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const emp = document.getElementById('empresa_selector').value;
-        const moneda = (emp === "Pethelios") ? "$" : "C$";
-        const brandColor = (emp === "Espumas") ? [0, 51, 153] : [159, 97, 49];
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const emp = document.getElementById('empresa_selector').value;
+    const moneda = (emp === "Pethelios") ? "$" : "C$";
+    const brandColor = (emp === "Espumas") ? [0, 51, 153] : [159, 97, 49];
 
-        // --- ESTÉTICA CABECERA ---
-        doc.setFillColor(...brandColor);
-        doc.rect(0, 0, 210, 45, 'F');
+    // ==========================================================
+    // CONEXIÓN CON FIREBASE PARA EL NÚMERO CORRELATIVO
+    // ==========================================================
+    const incluirCliente = document.getElementById('activar_cliente')?.checked;
+    let numeroActual = 7560; // Valor inicial si la base de datos está vacía
 
-        // Logo posicionado al lado del nombre
-        const img = document.getElementById('img-logo');
+    if (incluirCliente) {
         try {
-            doc.setFillColor(255, 255, 255);
-            doc.roundedRect(45, 10, 25, 25, 2, 2, 'F');
-            doc.addImage(img, 'PNG', 47, 12, 21, 21);
-        } catch (e) { console.warn("Logo no disponible"); }
+            // Leemos el valor actual de la nube
+            const snapshot = await database.ref('contador_pdf').once('value');
+            const valorNube = snapshot.val();
 
-        // Texto Cabecera (ajustado a la derecha del logo)
-        doc.setTextColor(255, 255, 255);
+            if (valorNube !== null) {
+                numeroActual = valorNube;
+            } else {
+                // Si es la primera vez absoluta, inicializamos en la nube
+                await database.ref('contador_pdf').set(7560);
+            }
+        } catch (error) {
+        console.error("Error detallado:", error);
+        // Esta línea es la clave, nos dirá el "secreto" del fallo
+        alert("Fallo de conexión: " + error.message);
+        return;
+    }
+    }
+
+    // 1. PRIMERO DIBUJAMOS LA CABECERA (EL FONDO)
+    doc.setFillColor(...brandColor);
+    doc.rect(0, 0, 210, 45, 'F');
+
+    // 2. AHORA DIBUJAMOS EL TEXTO ENCIMA DE LA CABECERA
+    if (incluirCliente) {
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255); // Color BLANCO
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text(emp.toUpperCase(), 75, 22);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.text("COTIZACIÓN DE SERVICIOS PROFESIONALES", 75, 29);
-        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 75, 34);
-        // --- SECCIÓN LOGÍSTICA ---
-        let currentY = 55;
+        doc.text(`No. Proforma: ${numeroActual}`, 150, 25);
+    }
+
+    // --- LOGO Y TÍTULOS ---
+    const img = document.getElementById('img-logo');
+    try {
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(45, 10, 25, 25, 2, 2, 'F');
+        doc.addImage(img, 'PNG', 47, 12, 21, 21);
+    } catch (e) { console.warn("Logo no disponible"); }
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text(emp.toUpperCase(), 75, 22);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const textoCabecera = incluirCliente ? "COTIZACIÓN DE SERVICIOS" : "PRESUPUESTO DE SERVICIOS";
+    doc.text(textoCabecera, 75, 29);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 75, 34);
+
+    let currentY = 55;
+
+    // --- SECCIÓN DATOS DEL CLIENTE ---
+    if (incluirCliente) {
         doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("DETALLES DE LOGÍSTICA Y ENTREGA", 15, currentY);
-
+        doc.text("DATOS DEL CLIENTE", 15, currentY);
         doc.setDrawColor(220);
         doc.line(15, currentY + 2, 195, currentY + 2);
 
         doc.setTextColor(80);
         doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        const zona = document.getElementById('trans_zona').value || "No especificado";
-        const ruta = document.getElementById('trans_ruta').value || "No especificado";
-        const destino = document.getElementById('trans_subruta').value || "Recogida en sucursal";
-        doc.text(`Zona: ${zona}`, 15, currentY + 8);
-        doc.text(`Ruta: ${ruta}`, 75, currentY + 8);
-        doc.text(`Destino Final: ${destino}`, 135, currentY + 8);
 
-        // --- TABLA DE PRODUCTOS ---
-        const rows = carrito.map(i => [
-            i.nombre,
+        const nombreC = (document.getElementById('cliente_nombre') || document.getElementById('nombre_cliente'))?.value || "N/A";
+        const cedulaC = (document.getElementById('cliente_cedula') || document.getElementById('cedula_cliente'))?.value || "N/A";
+        const telC    = (document.getElementById('cliente_tel')    || document.getElementById('telefono_cliente'))?.value || "N/A";
+        const direC   = (document.getElementById('cliente_direccion') || document.getElementById('direccion_cliente'))?.value || "N/A";
+
+        doc.setFont("helvetica", "bold");  doc.text("Cliente:", 15, currentY + 10);
+        doc.setFont("helvetica", "normal"); doc.text(nombreC, 40, currentY + 10);
+        doc.setFont("helvetica", "bold");  doc.text("Cédula/RUC:", 115, currentY + 10);
+        doc.setFont("helvetica", "normal"); doc.text(cedulaC, 145, currentY + 10);
+        doc.setFont("helvetica", "bold");  doc.text("Teléfono:", 15, currentY + 16);
+        doc.setFont("helvetica", "normal"); doc.text(telC, 40, currentY + 16);
+        doc.setFont("helvetica", "bold");  doc.text("Dirección:", 115, currentY + 16);
+        const direccionSplit = doc.splitTextToSize(direC, 50);
+        doc.text(direccionSplit, 145, currentY + 16);
+
+        currentY += 28;
+    }
+
+    // --- SECCIÓN LOGÍSTICA ---
+    doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALLES DE LOGÍSTICA Y ENTREGA", 15, currentY);
+    doc.setDrawColor(220);
+    doc.line(15, currentY + 2, 195, currentY + 2);
+
+    doc.setTextColor(80);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const zona = document.getElementById('trans_zona')?.value || "No especificado";
+    const ruta = document.getElementById('trans_ruta')?.value || "No especificado";
+    const destino = document.getElementById('trans_subruta')?.value || "Recogida en sucursal";
+
+    doc.text(`Zona: ${zona}`, 15, currentY + 8);
+    doc.text(`Ruta: ${ruta}`, 75, currentY + 8);
+    doc.text(`Destino Final: ${destino}`, 135, currentY + 8);
+
+    // --- TABLA ---
+    const rows = carrito.map(i => {
+        let nombreMostrar = i.nombre;
+        if (i.descripcion_pdf && i.descripcion_pdf !== "") nombreMostrar += `\nDetalle: ${i.descripcion_pdf}`;
+        return [
+            nombreMostrar,
             i.cant.toString(),
             `${moneda} ${i.precio.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
             `${moneda} ${i.total.toLocaleString(undefined, {minimumFractionDigits: 2})}`
-        ]);
+        ];
+    });
 
-        doc.autoTable({
-            startY: currentY + 15,
-            head: [['Descripción del Servicio / Producto', 'Cant.', 'Precio Unit.', 'Subtotal']],
-            body: rows,
-            theme: 'striped',
-            headStyles: { fillColor: brandColor, textColor: 255, fontStyle: 'bold', halign: 'center' },
-            bodyStyles: { fontSize: 9, textColor: 50 },
-            columnStyles: {
-                0: { cellWidth: 100 },
-                1: { halign: 'center', cellWidth: 20 },
-                2: { halign: 'right', cellWidth: 35 },
-                3: { halign: 'right', cellWidth: 35 }
-            },
-            margin: { left: 15, right: 15 }
-        });
-// --- BLOQUE DE TOTALES (POSICIÓN OPTIMIZADA) ---
-// Cambiamos + 10 por + 20 para que no esté pegado a la última fila de la tabla
-currentY = doc.lastAutoTable.finalY + 20;
+    doc.autoTable({
+        startY: currentY + 15,
+        head: [['Descripción del Servicio / Producto', 'Cant.', 'Precio Unit.', 'Subtotal']],
+        body: rows,
+        theme: 'striped',
+        headStyles: { fillColor: brandColor, textColor: 255, fontStyle: 'bold', halign: 'center' },
+        margin: { left: 15, right: 15 },
+        styles: { overflow: 'linebreak' }
+    });
 
-// Si el bloque está muy cerca del borde inferior (260), saltamos de página
-if (currentY > 260) {
-    doc.addPage();
-    currentY = 30; // Si salta de página, que empiece con buen margen arriba
-}
+    // --- TOTALES ---
+    currentY = doc.lastAutoTable.finalY + 20;
+    if (currentY > 260) { doc.addPage(); currentY = 30; }
 
-const sub = carrito.reduce((a, b) => a + b.total, 0);
-const calc = calcularTotales(sub);
+    const sub = carrito.reduce((a, b) => a + b.total, 0);
+    const calc = calcularTotales(sub);
 
-const drawTotalRow = (label, value, y, isTotal = false) => {
-    const startX = 130;
-    const endX = 195;
+    const drawTotalRow = (label, value, y, isTotal = false) => {
+        if (isTotal) {
+            doc.setFillColor(245, 245, 245);
+            doc.rect(130, y - 6, 65, 10, 'F');
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(...brandColor);
+        } else {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(80);
+        }
+        doc.text(label, 135, y);
+        doc.text(`${moneda} ${value.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 195, y, { align: 'right' });
+    };
 
-    if (isTotal) {
-        doc.setFillColor(245, 245, 245);
-        doc.rect(startX, y - 6, 65, 10, 'F');
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(...brandColor);
-    } else {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(80);
-    }
-
-    doc.text(label, startX + 5, y);
-    doc.text(
-        `${moneda} ${value.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-        endX,
-        y,
-        { align: 'right' }
-    );
-};
-
-// --- DIBUJO DE FILAS CON ESPACIADO ---
-drawTotalRow("Subtotal:", calc.subtotal, currentY);
-currentY += 8; // Aumenté un poco de 7 a 8 para que no se vean amontonados
-
-if (calc.ahorro > 0) {
-    doc.setTextColor(180, 0, 0);
-    drawTotalRow("Descuento aplicado:", -calc.ahorro, currentY);
+    drawTotalRow("Subtotal:", calc.subtotal, currentY);
     currentY += 8;
-}
+    if (calc.ahorro > 0) {
+        doc.setTextColor(180, 0, 0);
+        drawTotalRow("Descuento aplicado:", -calc.ahorro, currentY);
+        currentY += 8;
+    }
+    drawTotalRow("IVA (15%):", calc.iva, currentY);
+    currentY += 15;
+    drawTotalRow("TOTAL NETO:", calc.total, currentY, true);
 
-drawTotalRow("IVA (15%):", calc.iva, currentY);
-currentY += 15; // Un salto un poco más grande (15) antes del Total Neto para que resalte
+    // --- PIE DE PÁGINA ---
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`${emp} Nicaragua - Documento Generado Digitalmente`, 105, 290, { align: 'center' });
 
-drawTotalRow("TOTAL NETO:", calc.total, currentY, true);
-        // --- PIE DE PÁGINA ---
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.setFont("helvetica", "italic");
-        //doc.text("Gracias por su preferencia. Esta cotización tiene una validez de 15 días.", 105, 285, { align: 'center' });
-        doc.text(`${emp} Nicaragua - Documento Generado Digitalmente`, 105, 290, { align: 'center' });
+    // --- GUARDADO E INCREMENTO EN NUBE ---
+    if (incluirCliente) {
+        doc.save(`Proforma_${numeroActual}_${emp}.pdf`);
 
-        doc.save(`Cotizacion_${emp}_${new Date().getTime()}.pdf`);
+        // AQUÍ ACTUALIZAMOS FIREBASE PARA LA SIGUIENTE PC
+        await database.ref('contador_pdf').set(numeroActual + 1);
+    } else {
+        doc.save(`Presupuesto_${emp}_${new Date().getTime()}.pdf`);
     }
 
-    cambiarEmpresa();
+
+
+}    cambiarEmpresa();
+</script>
+<script>
+function toggleCliente() {
+    const check = document.getElementById('activar_cliente');
+    const seccion = document.getElementById('seccion_cliente');
+
+    // Usamos display block/none para que sea compatible con tu diseño actual
+    seccion.style.display = check.checked ? 'block' : 'none';
+}
+
+// Validación básica para el teléfono mientras escriben
+document.getElementById('cliente_tel')?.addEventListener('input', function (e) {
+    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,4})/);
+    e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
+});
+</script>
+<script>
+// ESTE CÓDIGO SOLO SE ENCARGA DE LA DESCRIPCIÓN DE SERVICIOS
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Identificamos el select de servicios (Servicio a Realizar)
+    // Buscamos por el nombre que suele tener en estos sistemas
+    const selectServicio = document.querySelector('select[name="servicio_realizar"]') ||
+                           document.querySelector('select[id*="servicio"]');
+
+    // 2. Identificamos el contenedor de descripción que pegaste en el HTML
+    const contenedorDesc = document.getElementById('contenedor-descripcion');
+
+    if (selectServicio && contenedorDesc) {
+        selectServicio.addEventListener('change', function() {
+            // Obtenemos el texto de la opción seleccionada
+            const texto = this.options[this.selectedIndex].text.toLowerCase();
+
+            // SI LA OPCIÓN TIENE LA PALABRA "ESPUMA" O "OTROS"
+            if (texto.includes("espuma") || texto.includes("otros")) {
+                contenedorDesc.style.display = 'block'; // Mostrar
+            } else {
+                contenedorDesc.style.display = 'none';  // Ocultar
+            }
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener("change", function(event) {
+    // 1. Buscamos el selector de Categoría (el primer cuadro)
+    // Usamos querySelector por si el ID cambia, buscamos el que dice "Categoría"
+    const selectCat = document.querySelector('select[id*="categoria"]') || document.querySelector('select');
+    const contenedor = document.getElementById('contenedor-descripcion');
+
+    if (event.target === selectCat) {
+        const opcionTexto = selectCat.options[selectCat.selectedIndex].text.toUpperCase();
+
+        // 2. Si la categoría seleccionada es "OTROS" o "OTRO"
+        if (opcionTexto.includes("OTRO")) {
+            contenedor.style.display = 'block'; // Aparece arriba del botón
+        } else {
+            contenedor.style.display = 'none';  // Se oculta
+            document.getElementById('descripcion_servicio').value = ''; // Limpia el texto
+        }
+    }
+});
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtiZmnAn7ct49IpEz2qsGVFQVB_YmL9hQ",
+    authDomain: "proformaespumas.firebaseapp.com",
+    databaseURL: "https://proformaespumas-default-rtdb.firebaseio.com",
+    projectId: "proformaespumas",
+    storageBucket: "proformaespumas.firebasestorage.app",
+    messagingSenderId: "391176130544",
+    appId: "1:391176130544:web:1575d4e007c7ed27789735"
+  };
+
+  // Esto inicializa Firebase correctamente
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const database = firebase.database();
 </script>
 </body>
 </html>
+
