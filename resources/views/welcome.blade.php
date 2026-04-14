@@ -507,7 +507,10 @@
             { nombre: "Grande (Limpieza Profunda)", precio: 3500 },
             { nombre: "Jacuzzi (Limpieza Profunda)", precio: 1500 },
             { nombre: "Puerta de vidrio (Limpieza Profunda)", precio: 600 },
-            { nombre: "Bateria de Baños (Limpieza Profunda)", precio: 3700 }
+            { nombre: "Bateria de Baños (Limpieza Profunda)", precio: 3700 },
+            { nombre: "Inodoro (Limpieza Profunda)", precio: 740 },
+            { nombre: "Orinario(Limpieza Profunda)", precio: 550 },
+            { nombre: "Lavamanos(Limpieza Profunda)", precio: 400 }
         ],
 
 
@@ -536,7 +539,7 @@
                 { nombre: "Sanetización (M2)", precio_bajo: 20, precio_alto: 10, limite: 1000, dinamico: true }
             ],
               "Otros": [
-            { nombre: "Otros (Limpieza Profunda)", precio: 3700 }
+            { nombre: "Otros", precio: 3700 }
 
         ]
         },
