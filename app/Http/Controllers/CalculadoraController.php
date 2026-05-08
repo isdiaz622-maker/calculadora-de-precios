@@ -10,10 +10,19 @@ class CalculadoraController extends Controller
     /**
      * Muestra el formulario principal.
      */
-    public function index()
-    {
-        return view('welcome');
-    }
+   public function index()
+{
+    // Creamos la lista manualmente
+    $vendedores = collect([
+        (object)['id' => 1, 'name' => 'Braulio Duartes-venta empresarial'],
+        (object)['id' => 2, 'name' => 'Richard Toribio-venta Domiciliar'],
+        (object)['id' => 3, 'name' => 'Angie Castro - venta Domiciliar'],
+        (object)['id' => 4, 'name' => 'Yolanda Martínez-venta Domiciliar'],
+        (object)['id' => 5, 'name' => 'Guiermo Moreno-venta Domiciliar'],
+    ]);
+
+    return view('welcome', compact('vendedores'));
+}
 
     /**
      * Procesa los datos y genera la vista de la factura.

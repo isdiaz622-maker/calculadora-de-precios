@@ -156,40 +156,52 @@
                     </button>
                 </div>
             </div>
-
-            <div class="mb-4">
+<div class="mb-4">
     <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="activar_cliente" onclick="toggleCliente()">
-        <label class="form-check-label fw-bold text-primary" for="activar_cliente uppercase">
-            ¿INCLUIR DATOS DEL CLIENTE?
+        <input class="form-check-input" type="checkbox" id="activar_cliente" onchange="toggleCliente()" autocomplete="off">
+        <label class="form-check-label fw-bold text-primary text-uppercase" for="activar_cliente">
+            ¿Incluir datos del cliente?
         </label>
     </div>
+</div>
 
-    <div id="seccion_cliente" style="display: none;" class="p-3 border rounded bg-light">
-        <h6 class="seccion-titulo text-dark mb-3">
-            <i class="fas fa-user-edit me-2"></i> Datos del Cliente
-        </h6>
+<div id="seccion_cliente" class="card p-4 mb-4">
+    <h6 class="seccion-titulo"><i class="fas fa-user me-2"></i> DATOS DEL CLIENTE</h6>
+    <hr>
+    <div class="card-body">
         <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small">Nombre Completo</label>
-                <input type="text" id="cliente_nombre" class="form-control form-control-sm" placeholder="Nombre del cliente">
+            <div class="col-md-4">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" name="cliente_nombre" class="form-control" placeholder="Nombre del cliente">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Dirección</label>
+                <input type="text" name="cliente_direccion" class="form-control" placeholder="Dirección exacta">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Teléfono</label>
+                <input type="text" name="cliente_telefono" class="form-control" placeholder="0000-0000">
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small">Dirección</label>
-                <input type="text" id="cliente_direccion" class="form-control form-control-sm" placeholder="Dirección exacta">
+            <div class="col-md-6">
+                <label class="form-label">Cédula / RUC</label>
+                <input type="text" name="cliente_id" class="form-control" placeholder="ID del cliente">
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small">Teléfono</label>
-                <input type="tel" id="cliente_tel" class="form-control form-control-sm" placeholder="0000-0000" maxlength="9">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold small">Cédula / RUC</label>
-                <input type="text" id="cliente_cedula" class="form-control form-control-sm" placeholder="ID del cliente">
+
+            <div class="col-md-6">
+                <label class="form-label text-primary" style="font-weight: bold;">Vendedor Asignado</label>
+                <select name="user_id" class="form-select">
+                    <option value="">Seleccione un vendedor...</option>
+                    @foreach($vendedores as $vendedor)
+                        <option value="{{ $vendedor->id }}">{{ $vendedor->name }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
 </div>
+
+
 <h6 class="seccion-titulo"><i class="fas fa-map-marker-alt me-2"></i> <span id="label_seccion_logistica">Logística de Entrega</span></h6>
 
             <div class="card p-4">
@@ -1122,7 +1134,35 @@ async function generarPDF() {
     } else {
         doc.save(`Presupuesto_${emp}_${new Date().getTime()}.pdf`);
     }
+   // ... aquí termina tu función generarPDF() ...
 
+    // --- ESTO ES LO QUE DEBES PEGAR ---
+
+    // 1. Forzar que al recargar todo esté desactivado
+    document.addEventListener("DOMContentLoaded", function() {
+        const check = document.getElementById('activar_cliente');
+        const seccion = document.getElementById('seccion_cliente');
+
+        if (check && seccion) {
+            check.checked = false;          // Switch apagado
+            seccion.style.display = 'none'; // Sección oculta
+        }
+    });
+
+    // 2. Función para mostrar/ocultar cuando hagas clic
+    function toggleCliente() {
+        const check = document.getElementById('activar_cliente');
+        const seccion = document.getElementById('seccion_cliente');
+        if (seccion) {
+            seccion.style.display = check.checked ? 'block' : 'none';
+        }
+    }
+
+    // 3. Validación de teléfono (opcional, la que ya tenías)
+    document.getElementById('cliente_tel')?.addEventListener('input', function (e) {
+        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
+    });
 
 
 }    cambiarEmpresa();
