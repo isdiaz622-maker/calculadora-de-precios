@@ -165,7 +165,7 @@
     </div>
 </div>
 
-<div id="seccion_cliente" class="card p-4 mb-4">
+<div id="seccion_cliente" class="card p-4 mb-4" style="display: none;">
     <h6 class="seccion-titulo"><i class="fas fa-user me-2"></i> DATOS DEL CLIENTE</h6>
     <hr>
     <div class="card-body">
@@ -200,10 +200,6 @@
         </div>
     </div>
 </div>
-
-
-<h6 class="seccion-titulo"><i class="fas fa-map-marker-alt me-2"></i> <span id="label_seccion_logistica">Logística de Entrega</span></h6>
-
             <div class="card p-4">
                 <h6 class="seccion-titulo"><i class="fas fa-map-marker-alt me-2"></i> <span id="label_seccion_logistica">Logística de Entrega</span></h6>
                 <div class="row g-3 mb-4">
@@ -908,6 +904,17 @@
         const iva = document.getElementById('aplicar_iva').checked ? (base * 0.15) : 0;
         return { subtotal, ahorro, iva, total: base + iva };
     }
+    function toggleCliente() {
+    const switchInput = document.getElementById('activar_cliente');
+    const seccion = document.getElementById('seccion_cliente');
+
+    // Esto fuerza a que el diseño se ajuste correctamente
+    if (switchInput.checked) {
+        seccion.style.setProperty('display', 'block', 'important');
+    } else {
+        seccion.style.setProperty('display', 'none', 'important');
+    }
+}
 
     function limpiarTodo() {
         carrito = [];
@@ -915,27 +922,24 @@
         document.getElementById('aplicar_iva').checked = false;
         cambiarEmpresa();
     }
-
 async function generarPDF() {
     if(carrito.length === 0) return alert("Agregue servicios para generar la cotización");
 
     const { jsPDF } = window.jspdf;
 
-    // --- CAMBIO 1: ACTIVAR COMPRESIÓN ---
+    // --- CONFIGURACIÓN INICIAL ---
     const doc = new jsPDF({
         orientation: 'p',
         unit: 'mm',
         format: 'a4',
-        compress: true // Esto comprime textos y vectores automáticamente
+        compress: true
     });
 
     const emp = document.getElementById('empresa_selector').value;
     const moneda = (emp === "Pethelios") ? "$" : "C$";
     const brandColor = (emp === "Espumas") ? [0, 51, 153] : [159, 97, 49];
 
-    // ==========================================================
-    // CONEXIÓN CON FIREBASE PARA EL NÚMERO CORRELATIVO
-    // ==========================================================
+    // --- CONEXIÓN CON FIREBASE PARA CORRELATIVO ---
     const incluirCliente = document.getElementById('activar_cliente')?.checked;
     let numeroActual = 7560;
 
@@ -949,17 +953,15 @@ async function generarPDF() {
                 await database.ref('contador_pdf').set(7560);
             }
         } catch (error) {
-            console.error("Error detallado:", error);
-            alert("Fallo de conexión: " + error.message);
-            return;
+            console.error("Error Firebase:", error);
         }
     }
 
-    // 1. PRIMERO DIBUJAMOS LA CABECERA (EL FONDO)
+    // 1. CABECERA (RECTÁNGULO DE COLOR)
     doc.setFillColor(...brandColor);
     doc.rect(0, 0, 210, 45, 'F');
 
-    // 2. AHORA DIBUJAMOS EL TEXTO ENCIMA DE LA CABECERA
+    // 2. TEXTO EN CABECERA
     if (incluirCliente) {
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
@@ -967,35 +969,23 @@ async function generarPDF() {
         doc.text(`No. Proforma: ${numeroActual}`, 150, 25);
     }
 
-    // --- LOGO OPTIMIZADO (CAMBIO 2) ---
-   // --- LOGO OPTIMIZADO Y SIN FONDO NEGRO ---
+    // --- LOGO OPTIMIZADO ---
     const img = document.getElementById('img-logo');
     try {
-        // Dibujamos el cuadro blanco redondeado de fondo en el PDF
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(45, 10, 25, 25, 2, 2, 'F');
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 200;
-        canvas.height = 200;
-
-        // --- SOLUCIÓN AL FONDO NEGRO: Pintar fondo blanco en el canvas ---
+        canvas.width = 200; canvas.height = 200;
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Dibujamos el logo encima del fondo blanco
         ctx.drawImage(img, 0, 0, 200, 200);
 
-        // Convertimos a JPEG liviano (ahora el fondo será blanco, no negro)
         const imgData = canvas.toDataURL('image/jpeg', 0.7);
-
         doc.addImage(imgData, 'JPEG', 47, 12, 21, 21, undefined, 'FAST');
-    } catch (e) {
-        console.warn("Logo no disponible");
-    }
+    } catch (e) { console.warn("Logo no cargado"); }
 
-    // --- RESTO DEL CÓDIGO (SIN CAMBIOS PARA NO BORRAR NADA) ---
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
@@ -1009,7 +999,7 @@ async function generarPDF() {
 
     let currentY = 55;
 
-    // --- SECCIÓN DATOS DEL CLIENTE ---
+    // --- SECCIÓN DATOS DEL CLIENTE (CORREGIDO) ---
     if (incluirCliente) {
         doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
         doc.setFontSize(11);
@@ -1021,17 +1011,21 @@ async function generarPDF() {
         doc.setTextColor(80);
         doc.setFontSize(9);
 
-        const nombreC = (document.getElementById('cliente_nombre') || document.getElementById('nombre_cliente'))?.value || "N/A";
-        const cedulaC = (document.getElementById('cliente_cedula') || document.getElementById('cedula_cliente'))?.value || "N/A";
-        const telC    = (document.getElementById('cliente_tel')    || document.getElementById('telefono_cliente'))?.value || "N/A";
-        const direC   = (document.getElementById('cliente_direccion') || document.getElementById('direccion_cliente'))?.value || "N/A";
+        // Captura usando querySelector para evitar errores de ID
+        const nombreC = document.querySelector('[name="cliente_nombre"]')?.value || "N/A";
+        const cedulaC = document.querySelector('[name="cliente_id"]')?.value || "N/A";
+        const telC    = document.querySelector('[name="cliente_telefono"]')?.value || "N/A";
+        const direC   = document.querySelector('[name="cliente_direccion"]')?.value || "N/A";
 
         doc.setFont("helvetica", "bold");  doc.text("Cliente:", 15, currentY + 10);
         doc.setFont("helvetica", "normal"); doc.text(nombreC, 40, currentY + 10);
+
         doc.setFont("helvetica", "bold");  doc.text("Cédula/RUC:", 115, currentY + 10);
         doc.setFont("helvetica", "normal"); doc.text(cedulaC, 145, currentY + 10);
+
         doc.setFont("helvetica", "bold");  doc.text("Teléfono:", 15, currentY + 16);
         doc.setFont("helvetica", "normal"); doc.text(telC, 40, currentY + 16);
+
         doc.setFont("helvetica", "bold");  doc.text("Dirección:", 115, currentY + 16);
         const direccionSplit = doc.splitTextToSize(direC, 50);
         doc.text(direccionSplit, 145, currentY + 16);
@@ -1058,10 +1052,10 @@ async function generarPDF() {
     doc.text(`Ruta: ${ruta}`, 75, currentY + 8);
     doc.text(`Destino Final: ${destino}`, 135, currentY + 8);
 
-    // --- TABLA ---
+    // --- TABLA DE PRODUCTOS ---
     const rows = carrito.map(i => {
         let nombreMostrar = i.nombre;
-        if (i.descripcion_pdf && i.descripcion_pdf !== "") nombreMostrar += `\nDetalle: ${i.descripcion_pdf}`;
+        if (i.descripcion_pdf) nombreMostrar += `\nDetalle: ${i.descripcion_pdf}`;
         return [
             nombreMostrar,
             i.cant.toString(),
@@ -1080,9 +1074,9 @@ async function generarPDF() {
         styles: { overflow: 'linebreak' }
     });
 
-    // --- TOTALES Y PIE DE PÁGINA ---
-    currentY = doc.lastAutoTable.finalY + 20;
-    if (currentY > 260) { doc.addPage(); currentY = 30; }
+    // --- TOTALES ---
+    currentY = doc.lastAutoTable.finalY + 15;
+    if (currentY > 250) { doc.addPage(); currentY = 30; }
 
     const sub = carrito.reduce((a, b) => a + b.total, 0);
     const calc = calcularTotales(sub);
@@ -1114,26 +1108,54 @@ async function generarPDF() {
     currentY += 15;
     drawTotalRow("TOTAL NETO:", calc.total, currentY, true);
 
-    const notas = [
-        "Nota: Oferta Válida por 30 días",
-        "NOTA: Se solicita conexión a agua y energía para conectar equipo de limpieza"
-    ];
-    doc.setFontSize(8);
-    doc.setTextColor(0);
-    doc.text(notas[0], 105, 270, { align: 'center' });
-    doc.text(notas[1], 105, 275, { align: 'center' });
+ // --- SECCIÓN DE FIRMA CON TELÉFONO COMPLETO ---
+const vSel = document.querySelector('[name="user_id"]');
 
-    doc.setFontSize(7);
-    doc.setTextColor(150);
-    doc.text(`${emp} Nicaragua - Documento Generado Digitalmente`, 105, 290, { align: 'center' });
+if (vSel && vSel.selectedIndex > 0) {
+    const textoCompleto = vSel.options[vSel.selectedIndex].text;
 
-    // --- GUARDADO E INCREMENTO EN NUBE ---
+    const partes = textoCompleto.split('-');
+    const nombreV = partes[0] ? partes[0].trim() : "";
+    const cargoV  = partes[1] ? partes[1].trim() : "";
+
+    let telV = "";
+    if (partes.length >= 3) {
+        telV = "Tel: " + partes.slice(2).join('-').trim();
+    }
+
+    // --- EL AJUSTE PARA EL ESPACIO ---
+    currentY += 40; // <--- Aumenta este número para bajar más la firma
+
+    // Validación para que la firma no se salga de la hoja
+    if (currentY > 240) {
+        doc.addPage();
+        currentY = 30;
+    }
+
+    doc.setDrawColor(0);
+    // Usamos el nuevo currentY para que todo baje en conjunto
+    doc.line(70, currentY + 20, 140, currentY + 20);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(nombreV.toUpperCase(), 105, currentY + 27, { align: 'center' });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(cargoV, 105, currentY + 32, { align: 'center' });
+
+    if(telV) {
+        doc.text(telV, 105, currentY + 37, { align: 'center' });
+    }
+}
+    // --- GUARDAR Y ACTUALIZAR ---
     if (incluirCliente) {
         doc.save(`Proforma_${numeroActual}_${emp}.pdf`);
         await database.ref('contador_pdf').set(numeroActual + 1);
     } else {
         doc.save(`Presupuesto_${emp}_${new Date().getTime()}.pdf`);
     }
+}
    // ... aquí termina tu función generarPDF() ...
 
     // --- ESTO ES LO QUE DEBES PEGAR ---
@@ -1156,7 +1178,7 @@ async function generarPDF() {
         if (seccion) {
             seccion.style.display = check.checked ? 'block' : 'none';
         }
-    }
+
 
     // 3. Validación de teléfono (opcional, la que ya tenías)
     document.getElementById('cliente_tel')?.addEventListener('input', function (e) {

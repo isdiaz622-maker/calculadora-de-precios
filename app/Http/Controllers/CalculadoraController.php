@@ -14,11 +14,11 @@ class CalculadoraController extends Controller
 {
     // Creamos la lista manualmente
     $vendedores = collect([
-        (object)['id' => 1, 'name' => 'Braulio Duartes-venta empresarial'],
-        (object)['id' => 2, 'name' => 'Richard Toribio-venta Domiciliar'],
-        (object)['id' => 3, 'name' => 'Angie Castro - venta Domiciliar'],
-        (object)['id' => 4, 'name' => 'Yolanda Martínez-venta Domiciliar'],
-        (object)['id' => 5, 'name' => 'Guiermo Moreno-venta Domiciliar'],
+        (object)['id' => 1, 'name' => 'Braulio Duarte-Venta Empresarial-7886-2971'],
+        (object)['id' => 2, 'name' => 'Richard Toribio-Venta Domiciliar-75591323'],
+        (object)['id' => 3, 'name' => 'Angie Castro - Venta Domiciliar- 8786-0121'],
+        (object)['id' => 4, 'name' => 'Stefany Mejia-Jefa de ventas- 8998-0892'],
+        (object)['id' => 5, 'name' => 'Guiermo Moreno-Venta Occidente- 8588-3456'],
     ]);
 
     return view('welcome', compact('vendedores'));
