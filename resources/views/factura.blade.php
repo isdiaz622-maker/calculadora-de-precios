@@ -15,7 +15,7 @@
         /* Ajuste Estricto Tamaño Carta */
         @page {
             size: letter;
-            margin: 0;
+            margin: 0; /* Controlado por el contenedor */
         }
 
         body {
@@ -202,14 +202,9 @@
     </div>
 
     <div class="p-5 text-center mt-auto">
-        <div class="border-top pt-3 mb-4">
-            <p class="mb-1 fw-bold text-brand">¡Gracias por su preferencia!</p>
-            <p class="text-dark mb-0" style="font-size: 0.85rem; font-weight: 600;">
-                Esta proforma tiene una validez de 30 días calendario.
-            </p>
-            <p class="text-muted" style="font-size: 0.75rem;">
-                Vence el: {{ \Carbon\Carbon::parse($fecha)->addDays(30)->format('d/m/Y') }}
-            </p>
+        <div class="border-top pt-3">
+            <p class="mb-0 fw-bold text-brand">¡Gracias por su preferencia!</p>
+            <p class="text-muted" style="font-size: 0.75rem;">Esta cotización es válida por 15 días calendario.</p>
         </div>
     </div>
 </div>
