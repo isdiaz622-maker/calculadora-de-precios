@@ -512,8 +512,7 @@
             { nombre: "Sofá doble (Limpieza Profunda)", precio: 1400 },
             { nombre: "Sofá triple (Limpieza Profunda)", precio: 1600 },
             { nombre: "Sofa Cuadruple (Limpieza Profunda)", precio: 2000 },
-            { nombre: "PUFF (Limpieza Profunda)", precio: 555 },
-            { nombre: "Silla de Espera Grande (Limpieza Profunda)", precio: 555 }
+
         ],
 
         "Baños": [
@@ -533,7 +532,9 @@
             { nombre: "Sillas de Espera (Limpieza Profunda)", precio: 260 },
             { nombre: "Sillas ejecutivas medianas (Limpieza Profunda)", precio: 400 },
             { nombre: "Sillas ejecutivas Grandes (Limpieza Profunda)", precio: 600 },
-            { nombre: "Sillas de vehiculos para bebe (Limpieza Profunda)", precio: 800 }
+            { nombre: "Sillas de vehiculos para bebe (Limpieza Profunda)", precio: 800 },
+            { nombre: "PUFF (Limpieza Profunda)", precio: 555 },
+            { nombre: "Silla de Espera Grande (Limpieza Profunda)", precio: 555 }
         ],
 
         "Maletas O Bolsos de Viaje": [
