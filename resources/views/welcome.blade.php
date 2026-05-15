@@ -511,7 +511,9 @@
             { nombre: "Sofá Unipersonal (Limpieza Profunda)", precio: 1100 },
             { nombre: "Sofá doble (Limpieza Profunda)", precio: 1400 },
             { nombre: "Sofá triple (Limpieza Profunda)", precio: 1600 },
-            { nombre: "Sofa Cuadruple (Limpieza Profunda)", precio: 2000 }
+            { nombre: "Sofa Cuadruple (Limpieza Profunda)", precio: 2000 },
+            { nombre: "PUFF (Limpieza Profunda)", precio: 555 },
+            { nombre: "Silla de Espera Grande (Limpieza Profunda)", precio: 555 }
         ],
 
         "Baños": [
